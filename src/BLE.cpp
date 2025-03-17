@@ -92,7 +92,7 @@ void BLEReport()
         status[3] = 0x04;
 
         pCharacteristic->setValue(status,  sizeof(status));
-        pCharacteristic->notify();//通知给连接设备
+        pCharacteristic->notify();//通知给连接设备,连接订阅即可收到消息
         Serial.println("状态上报成功");
     }
     delay(5000);//每5s上报一次状态
