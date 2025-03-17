@@ -5,4 +5,8 @@
 #ifndef TEMPDETECT_H
 #define TEMPDETECT_H
 
+void TempDetectInit();
+
+void TempDetect();
+
 #endif //TEMPDETECT_H
