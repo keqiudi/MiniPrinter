@@ -12,7 +12,7 @@
 #define STEPMOTOR_AP_Pin 23
 #define STEPMOTOR_AM_Pin 22
 
-#define VH_EN_Pin 17
+
 
 #define STEPMOTOR_WAITTIME 2 //根据手册我们使用的是500Hz,我们使用每走一步时间为2ms,频率为500Hz
 
@@ -40,9 +40,6 @@ Ticker StepmotorTimer;
 void StepmotorInit()
 {
 
-    pinMode(VH_EN_Pin,OUTPUT);
-    digitalWrite(VH_EN_Pin,LOW);//VH_EN拉低,MOS管断开，为进行打印时必须关闭打印头电源
-
     pinMode(STEPMOTOR_BP_Pin,OUTPUT);
     pinMode(STEPMOTOR_BM_Pin,OUTPUT);
     pinMode(STEPMOTOR_AP_Pin,OUTPUT);
@@ -63,11 +60,11 @@ void StepmotorRunStep(uint32_t steps)
      {
          digitalWrite(STEPMOTOR_AP_Pin, StepmotorTimeTable[motorIndex][0]);
          digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][1]);
-         digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][2]);
-         digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][3]);
+         digitalWrite(STEPMOTOR_AM_Pin, StepmotorTimeTable[motorIndex][2]);
+         digitalWrite(STEPMOTOR_BM_Pin, StepmotorTimeTable[motorIndex][3]);
 
          motorIndex++;
-         motorIndex%=8;//8步为一个循环
+         motorIndex%=8;//8步为一个循环,4步为一行
 
          steps--;
 
@@ -84,8 +81,8 @@ void TimerCallBack()
 
     digitalWrite(STEPMOTOR_AP_Pin, StepmotorTimeTable[motorIndex][0]);
     digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][1]);
-    digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][2]);
-    digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][3]);
+    digitalWrite(STEPMOTOR_AM_Pin, StepmotorTimeTable[motorIndex][2]);
+    digitalWrite(STEPMOTOR_BM_Pin, StepmotorTimeTable[motorIndex][3]);
 
     motorIndex++;
     motorIndex%=8;
@@ -105,5 +102,13 @@ void StepmotorStart()
 
 void StepmotorStop()
 {
-    StepmotorTimer.detach();
+    digitalWrite(STEPMOTOR_BP_Pin,LOW);
+    digitalWrite(STEPMOTOR_BM_Pin,LOW);
+    digitalWrite(STEPMOTOR_AP_Pin,LOW);
+    digitalWrite(STEPMOTOR_AM_Pin,LOW);
+
+    if (StepmotorTimer.active() == true)
+    {
+        StepmotorTimer.detach();
+    }
 }

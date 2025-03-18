@@ -4,25 +4,37 @@
 #include "Key.h"
 #include "Battery.h"
 #include "BLE.h"
+#include "paperDetect.h"
+#include "TempDetect.h"
+#include "stepmotor.h"
+#include "printer.h"
+
 void setup()
 {
     Serial.begin(115200);
     Serial.printf("serial start");
 
-
     ledInit();
+    PrinterInit();
     keyInit();
-    BLEInit();
+    // BLEInit();
+
+    // PaperDetectInit();
+    // TempDetectInit();
+    StepmotorInit();
 
 }
 
 void loop()
 {
-    // keyScan();
+    keyScan();
     // BatteryDetect();
     // BLEReport();
+    // PaperDetect();
+    // TempDetect();
+    // delay(1000);
 
-    delay(1000);
+
 }
 
 

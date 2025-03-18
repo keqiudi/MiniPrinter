@@ -6,7 +6,6 @@
 
 #include <Arduino.h>
 
-#define VH_EN_Pin 17
 #define TEMP_Pin 36
 
 #define SET_ADC_BIT 12
@@ -55,9 +54,6 @@ float calculateTemp()
 
 void TempDetectInit()
 {
-    pinMode(VH_EN_Pin,OUTPUT);
-    digitalWrite(VH_EN_Pin,LOW);//VH_EN拉低,MOS管断开，为进行打印时必须关闭打印头电源
-
     analogReadResolution(SET_ADC_BIT);//设置ADC分辨率
 }
 
@@ -65,5 +61,5 @@ void TempDetectInit()
 void TempDetect()
 {
     float temp = calculateTemp();
-    Serial.printf("打印头当前温度为：%f\n",temp);
+    Serial.printf("打印头当前温度为：%.2f\r\n",temp);
 }

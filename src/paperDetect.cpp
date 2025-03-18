@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include "PaperDetect.h"
 
-#define VH_EN_Pin 17
+
 #define PaperDetect_Pin 35
 
 typedef enum
@@ -27,8 +27,6 @@ void PaperDetect_ISR()
 
 void PaperDetectInit()
 {
-    pinMode(VH_EN_Pin,OUTPUT);
-    digitalWrite(VH_EN_Pin,LOW);//VH_EN拉低,MOS管断开，为进行打印时必须关闭打印头电源
 
     pinMode(PaperDetect_Pin,INPUT);
     attachInterrupt(digitalPinToInterrupt(PaperDetect_Pin), PaperDetect_ISR, RISING);
@@ -37,15 +35,13 @@ void PaperDetectInit()
 
 void PaperDetect()
 {
-
-    if (state == PAPER_LACK)
+    if (digitalRead(PaperDetect_Pin) == HIGH)
     {
-        Serial.printf("Paper Lack!!!\n");
-
-        if (digitalRead(PaperDetect_Pin) == HIGH)
-        {
-            state = PAPER_FULL;
-        }
+        Serial.printf("Paper Lack");
+    }
+    else
+    {
+        state = PAPER_FULL;
     }
 }
 

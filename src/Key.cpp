@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <Key.h>
 #include <LED.h>
+#include "printer.h"
+#include "stepmotor.h"
+
 #define LONG_PRESS_TIME 1000
 
 bool KeyPressed = false;
@@ -49,54 +52,12 @@ void keyScan()
             }
             else
             {
-                Serial.printf("short press");
-                LED_Status = !LED_Status;
-                digitalWrite(LED_Pin,LED_Status);
+                PrinterTest();
+
             }
             KeyPressed = false;
         }
 
     }
 
-    // if (KeyPressed == false)
-    //
-    //     if(digitalRead(KEY_Pin) == LOW)
-    //     {
-    //         delay(10);
-    //         if (digitalRead(KEY_Pin) == LOW)
-    //         {
-    //             KeyPressed = true;
-    //             KeyPressTick = millis();
-    //         }
-    //     }
-    //
-    // if (KeyPressed == true)
-    // {
-    //
-    //
-    //     if (digitalRead(KEY_Pin) == HIGH)
-    //     {
-    //         if (millis() - KeyPressTick > LONG_PRESS_TIME)
-    //         {
-    //             Serial.printf("long press free");
-    //             LongPressed = false;
-    //
-    //         }
-    //         else
-    //         {
-    //             Serial.printf("short press");
-    //         }
-    //     }
-    //     else
-    //     {
-    //         if (millis() - KeyPressTick > LONG_PRESS_TIME)
-    //         {
-    //             if (LongPressed == false)
-    //             {
-    //                 Serial.printf("long press");
-    //                 LongPressed = true;
-    //             }
-    //         }
-    //     }
-    // }
 }
