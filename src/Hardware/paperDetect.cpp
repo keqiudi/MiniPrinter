@@ -4,16 +4,10 @@
 
 #include <Arduino.h>
 #include "PaperDetect.h"
-
+#include "device.h"
 
 #define PaperDetect_Pin 35
 
-typedef enum
-{
-    PAPER_FULL,
-    PAPER_LACK,
-
-}PaperStatus;
 
 volatile PaperStatus state = PAPER_FULL;
 
@@ -37,7 +31,7 @@ void PaperDetect()
 {
     if (digitalRead(PaperDetect_Pin) == HIGH)
     {
-        Serial.printf("Paper Lack");
+        Serial.printf("Paper Lack\r\n");
     }
     else
     {

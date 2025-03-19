@@ -6,7 +6,7 @@
 #include "printerSPI.h"
 #include "stepmotor.h"
 #include "printer.h"
-#include "tempDetect.h"
+#include "printerTemp.h"
 #include "paperDetect.h"
 #include "SPI.h"
 
@@ -27,18 +27,18 @@
 #define LAT_TIM 1 //锁存时间1us,手册是1ns可以行吗？
 
 
-static void PrinterPowerOn()
+ void PrinterPowerOn()
 {
     digitalWrite(VH_EN_Pin,HIGH);
 }
 
-static void PrinterPowerOff()
+ void PrinterPowerOff()
 {
     digitalWrite(VH_EN_Pin,LOW);
 }
 
 
-static void PrinterPowerInit()
+ void PrinterPowerInit()
 {
     pinMode(VH_EN_Pin,OUTPUT);
 
@@ -46,7 +46,7 @@ static void PrinterPowerInit()
 
 }
 
-static void StbOff()
+ void StbOff()
 {
     digitalWrite(STB1_Pin,LOW);
     digitalWrite(STB2_Pin,LOW);
@@ -56,7 +56,7 @@ static void StbOff()
     digitalWrite(STB6_Pin,LOW);
 }
 
-static void StbInit()
+ void StbInit()
 {
     pinMode(STB1_Pin,OUTPUT);
     pinMode(STB2_Pin,OUTPUT);
@@ -68,13 +68,13 @@ static void StbInit()
     StbOff();//默认关闭打印通道
 }
 
-static void LatInit()
+ void LatInit()
 {
     pinMode(LAT_Pin,OUTPUT);
     digitalWrite(LAT_Pin,HIGH);
 }
 
-static void LatOff()
+ void LatOff()
 {
     digitalWrite(LAT_Pin,HIGH);
 }
@@ -82,8 +82,6 @@ static void LatOff()
 
 void PrinterInit()
 {
-    TempDetectInit();//打印头温度检测初始化
-    PaperDetectInit();//缺纸检测初始化
 
     StepmotorInit();//步进电机初始化
     PrinterPowerInit();//打印头电源引脚初始化
@@ -172,6 +170,7 @@ bool StbWorking(bool needStop,uint8_t stbNum)
 
 static void SendOnelineData(uint8_t* data)
 {
+
     SPICommand(data,48);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
 
     digitalWrite(LAT_Pin,LOW);
@@ -196,7 +195,7 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
 
         if (size > printEnd)
         {
-            Serial.print("Printing...");
+
             SendOnelineData(pData);
 
             pData+=48;//移动至下一行的48Byte数据
@@ -217,6 +216,7 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
 
 
 
+
 static void setDebugData(uint8_t *print_data)
 {
     for (uint32_t index = 0; index < 48 * 5; ++index)
@@ -225,6 +225,7 @@ static void setDebugData(uint8_t *print_data)
         print_data[index] = 0x55;
     }
 }
+
 
 void PrinterTest()
 {
@@ -244,8 +245,7 @@ void PrinterTest()
     setDebugData(print_data);
     StartPrintingByOneStb(6,print_data,size);
 
-    Serial.print("test end");
-    StepmotorRunStep(50);
+    StepmotorRunStep(200);
 }
 
 

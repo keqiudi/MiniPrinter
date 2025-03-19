@@ -2,7 +2,7 @@
 // Created by keqiu on 25-3-17.
 //
 
-#include "TempDetect.h"
+#include "printerTemp.h"
 
 #include <Arduino.h>
 
@@ -60,6 +60,7 @@ void TempDetectInit()
 
 void TempDetect()
 {
+
     float temp = calculateTemp();
     Serial.printf("打印头当前温度为：%.2f\r\n",temp);
 }

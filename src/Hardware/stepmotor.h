@@ -5,6 +5,8 @@
 #ifndef STEPMOTOR_H
 #define STEPMOTOR_H
 
+#include <Arduino.h>
+
 void StepmotorInit();
 
 void StepmotorRunStep(uint32_t steps);

@@ -2,10 +2,10 @@
 // Created by keqiu on 25-3-10.
 //
 #include <Arduino.h>
-#include <Key.h>
-#include <LED.h>
-#include "printer.h"
-#include "stepmotor.h"
+#include <../key.h>
+#include <../led.h>
+#include "../printer.h"
+#include "../stepmotor.h"
 
 #define LONG_PRESS_TIME 1000
 
@@ -15,13 +15,13 @@ uint32_t KeyPressTick = 0;
 
  bool LED_Status = false;
 
-void keyInit()
+void KeyInit()
 {
     pinMode(KEY_Pin,INPUT);
 }
 
 
-void keyScan()
+void KeyScan()
 {
 
     if (digitalRead(KEY_Pin) == LOW)
@@ -45,14 +45,11 @@ void keyScan()
         {
             if (millis() - KeyPressTick > LONG_PRESS_TIME)
             {
-
-                    Serial.printf("long press");
-                    LED_Status = !LED_Status;
-                    digitalWrite(LED_Pin,LED_Status);
+                StepmotorRunStep(200);
             }
             else
             {
-                PrinterTest();
+                 PrinterTest();
 
             }
             KeyPressed = false;

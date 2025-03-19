@@ -4,7 +4,7 @@
 
 
 #include <Arduino.h>
-#include "Battery.h"
+#include "battery.h"
 #include "esp_adc_cal.h"
 
 #define Battery_ADC_Pin 34
@@ -18,7 +18,7 @@
 
 
 
-uint16_t getADValue()
+ uint16_t getADValue()
 {
 
     uint16_t ADValue =  0;
@@ -31,7 +31,7 @@ uint16_t getADValue()
 
 /**写的校准函数，实际使用和直接调用analogReadMilliVolts好像精度差不多**/
 
-uint32_t getCalibrationVoltage()
+ uint32_t getCalibrationVoltage()
 {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_11db);
@@ -60,8 +60,7 @@ void BatteryDetect()
     }
 
     uint16_t ADValue = analogRead(Battery_ADC_Pin);
-    Serial.printf("ADC Value:%d\r\n",ADValue);
-    Serial.printf("Battery Voltage:%.2lf\r\n",getADValue()*2/1000.0);
+
     Serial.printf("Battery:%d%%\r\n",Battery);
 
     delay(2000);

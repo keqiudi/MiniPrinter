@@ -11,4 +11,6 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size);
 
 void PrinterTest();
 
+void PrinterPowerOff();
+
 #endif //PRINTER_H

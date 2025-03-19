@@ -37,8 +37,12 @@ void SPICommand(uint8_t* data,uint8_t size)
 
     printerSPI.beginTransaction(printerSPI_Settings);//开启事务,自定义SPI通信参数,适用于多个SPI设备不同频率单独控制的情况
 
-    printerSPI.transfer(data,size);//如果只有一条SPI命令，可以直接使用transfer函数，不用开启结束事务
+    Serial.printf("data:%x\r\n",data[0]);
 
+    printerSPI.transfer(data,size);//如果只有一条SPI命令，可以直接使用transfer函数，不用开启结束事务
+    /*transfer函数是SPI中的双向传输，它不仅将数据发送到从设备，还会等待从设备发送回数据并将其存储在相同的 data 数组中,这里由于我们不接受打印机数据，所以会将data地址中的数据清空!!!*/
+
+    Serial.printf("data:%x\r\n",data[0]);
     printerSPI.endTransaction();//结束事务，恢复默认参数
 }
 

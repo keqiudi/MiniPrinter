@@ -6,7 +6,8 @@
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <BLE2902.h>
+#include <device.h>
+#include "led.h"
 
 #define DEVICE_NAME "Mini-Printer"
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b" //自定义服务UUID
@@ -22,14 +23,16 @@ class MyServerCallbacks : public BLEServerCallbacks
     void onConnect(BLEServer *pServer) override
     {
         BLEConnected = true;
-        Serial.println("有设备接入");
+        LedControl(LED_ON);
+        Serial.println("现在有设备接入~");
     }
 
     void onDisconnect(BLEServer *pServer) override
     {
         BLEConnected = false;
-        Serial.println("设备断开连接");
+        LedControl(LED_OFF);
 
+        Serial.println("设备断开连接~");
         pServer->startAdvertising();//由于BLE特性在设备连接后会关闭广播，所以这里需要重新开启，否则设备无法搜索到
 
     }
@@ -85,15 +88,18 @@ void BLEReport()
 {
     if (BLEConnected)
     {
-        uint8_t status[4];
-        status[0] = 0x01;
-        status[1] = 0x02;
-        status[2] = 0x03;
-        status[3] = 0x04;
+        DeviceStatus* pDevice = getDeviceStatus();
+
+        uint8_t status[4] = {0};
+
+        status[0] = pDevice->battery;
+        status[1] = pDevice->temperature;
+        status[2] = pDevice->paperStatus;
+        status[3] = pDevice->printerStatus;
 
         pCharacteristic->setValue(status,  sizeof(status));
         pCharacteristic->notify();//通知给连接设备,连接订阅即可收到消息
+
         Serial.println("状态上报成功");
     }
-    delay(5000);//每5s上报一次状态
 }

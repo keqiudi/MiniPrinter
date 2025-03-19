@@ -7,8 +7,8 @@
 
 #define KEY_Pin 5
 
-void keyInit();
+void KeyInit();
 
-void keyScan();
+void KeyScan();
 
 #endif //KEY_H

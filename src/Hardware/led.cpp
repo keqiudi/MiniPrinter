@@ -2,10 +2,10 @@
 // Created by keqiu on 25-3-10.
 //
 
-#include "LED.h"
+#include "led.h"
 #include "Arduino.h"
 
-void ledBlink(uint32_t ms)
+void LedBlink(uint32_t ms)
 {
     digitalWrite(LED_Pin,LOW);
     delay(ms);
@@ -17,7 +17,7 @@ void ledBlink(uint32_t ms)
     delay(ms);
 }
 
-void ledControl(LED_STATUS status)
+void LedControl(LED_STATUS status)
 {
     switch (status)
     {
@@ -30,16 +30,16 @@ void ledControl(LED_STATUS status)
         break;
 
     case LED_FAST_BLINK:
-        ledBlink(200);
+        LedBlink(200);
         break;
 
     case LED_SLOW_BLINK:
-        ledBlink(1000);
+        LedBlink(2000);
         break;
     }
 }
 
-void ledInit()
+void LedInit()
 {
   	pinMode(LED_Pin, OUTPUT);
 }

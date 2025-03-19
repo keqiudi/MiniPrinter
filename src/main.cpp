@@ -1,41 +1,39 @@
 #include <Arduino.h>
+#include "./Hardware/BLE.h"
+#include "./Hardware/key.h"
+#include "./Hardware/LED.h"
+#include "./Hardware/printer.h"
+#include "task.h"
+#include "./Hardware/battery.h"
+#include "./Hardware/printerTemp.h"
+#include "./Hardware/paperDetect.h"
 
-#include "LED.h"
-#include "Key.h"
-#include "Battery.h"
-#include "BLE.h"
-#include "paperDetect.h"
-#include "TempDetect.h"
-#include "stepmotor.h"
-#include "printer.h"
+
 
 void setup()
 {
     Serial.begin(115200);
-    Serial.printf("serial start");
 
-    ledInit();
+    KeyInit();
+    LedInit();
+    BLEInit();
+
+    TempDetectInit();//打印头温度检测初始化
+    PaperDetectInit();//缺纸检测初始化
+    PrinterPowerOff();
     PrinterInit();
-    keyInit();
-    // BLEInit();
-
-    // PaperDetectInit();
-    // TempDetectInit();
-    StepmotorInit();
 
 }
 
 void loop()
 {
-    keyScan();
+    KeyScan();
     // BatteryDetect();
-    // BLEReport();
-    // PaperDetect();
     // TempDetect();
+    // PaperDetect();
     // delay(1000);
-
-
 }
+
 
 
 
