@@ -18,6 +18,12 @@ void deviceStatusInit()
     deviceStatus.temperature = 25;
     deviceStatus.paperStatus = PAPER_FULL;
     deviceStatus.printerStatus = PRINTER_INIT;
+    deviceStatus.bleReadFlag = false;
+}
+
+void setBleReadFlag(bool status)
+{
+    deviceStatus.bleReadFlag = status;
 }
 
 

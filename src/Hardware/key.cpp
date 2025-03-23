@@ -2,10 +2,11 @@
 // Created by keqiu on 25-3-10.
 //
 #include <Arduino.h>
-#include <../key.h>
-#include <../led.h>
-#include "../printer.h"
-#include "../stepmotor.h"
+#include <./Hardware/key.h>
+#include <./Hardware/led.h>
+#include "./Hardware/printer.h"
+#include "./Hardware/stepmotor.h"
+#include "device.h"
 
 #define LONG_PRESS_TIME 1000
 
@@ -13,7 +14,7 @@ bool KeyPressed = false;
 bool LongPressed = false;
 uint32_t KeyPressTick = 0;
 
- bool LED_Status = false;
+bool LED_Status = false;
 
 void KeyInit()
 {
@@ -23,6 +24,8 @@ void KeyInit()
 
 void KeyScan()
 {
+
+    DeviceStatus* pDevice = getDeviceStatus();
 
     if (digitalRead(KEY_Pin) == LOW)
     {
@@ -43,14 +46,22 @@ void KeyScan()
 
         if (KeyPressed == true)
         {
-            if (millis() - KeyPressTick > LONG_PRESS_TIME)
+            if (pDevice->paperStatus == PAPER_FULL&&pDevice->printerStatus == PRINTER_IDLE)
             {
-                StepmotorRunStep(200);
+                if (millis() - KeyPressTick > LONG_PRESS_TIME)//长按操作
+                {
+
+                    StepmotorRunStep(200);
+
+                }
+                else//短按操作
+                {
+                    PrinterStbTest();
+                }
             }
             else
             {
-                 PrinterTest();
-
+                Serial.printf("正在打印中... 禁止使用按键调试");
             }
             KeyPressed = false;
         }

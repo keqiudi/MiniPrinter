@@ -6,11 +6,11 @@
 #define PRINTER_H
 
 void PrinterInit();
+void PrinterStbTest();
+void PrinterPowerOff();
+void PrinterPowerInit();
 
 void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size);
-
-void PrinterTest();
-
-void PrinterPowerOff();
+void StartPrintingByAllStb(uint8_t* data,uint32_t size);
 
 #endif //PRINTER_H

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <Ticker.h>
 
-#include "../Stepmotor.h"
+#include "./Hardware/Stepmotor.h"
 
 #define STEPMOTOR_BP_Pin 21
 #define STEPMOTOR_BM_Pin 19

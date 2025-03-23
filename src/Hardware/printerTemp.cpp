@@ -6,6 +6,8 @@
 
 #include <Arduino.h>
 
+#include "led.h"
+
 #define TEMP_Pin 36
 
 #define SET_ADC_BIT 12
@@ -63,4 +65,9 @@ void TempDetect()
 
     float temp = calculateTemp();
     Serial.printf("打印头当前温度为：%.2f\r\n",temp);
+
+    if (temp>40)
+    {
+        LedControl(LED_FAST_BLINK);
+    }
 }

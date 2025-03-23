@@ -4,21 +4,23 @@
 #include "BLE.h"
 #include <Arduino.h>
 
+#include "utils/myQueue.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <device.h>
+#include "device.h"
 #include "led.h"
 
 #define DEVICE_NAME "Mini-Printer"
-#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b" //自定义服务UUID
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8" //自定义特征UUID
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b" //自定义服务的UUID
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8" //自定义特征的UUID
 
 
 bool BLEConnected = false;
 
 BLECharacteristic *pCharacteristic;
 
-class MyServerCallbacks : public BLEServerCallbacks
+
+class IsConnectServerCallbacks : public BLEServerCallbacks
 {
     void onConnect(BLEServer *pServer) override
     {
@@ -38,7 +40,7 @@ class MyServerCallbacks : public BLEServerCallbacks
     }
 };
 
-class MyCharacteristicCallbacks : public BLECharacteristicCallbacks
+class TriggerCharacteristicCallbacks : public BLECharacteristicCallbacks
 {
 
     void onRead(BLECharacteristic *pCharacteristic) override
@@ -48,6 +50,38 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks
 
     void onWrite(BLECharacteristic *pCharacteristic) override
     {
+          uint8_t* pData = pCharacteristic->getData();//pData指向特征值缓冲区的首地址
+          size_t length = pCharacteristic->getLength();
+          if (length == 5)
+          {
+              if (pData[0]==0xA5 && pData[1]==0xA5 && pData[2]==0xA5 && pData[3]==0xA5)
+              {
+                  //设置打印深度
+                  switch (pData[4])
+                  {
+                      case 30:
+                          break;
+                      case 60:
+                          break;
+                      case 100:
+                          break;
+                      default:
+                          break;
+                  }
+                  return ; //设置深度后立马返回不处理其他
+              }
+              else if (pData[0]==0xA6&&pData[1]==0xA6&&pData[2]==0xA6&&pData[3]==0xA6 && pData[4]==0x01)
+              {
+                    setBleReadFlag(true);//接收到该信息代表数据接收完成了,触发打印
+                    Serial.printf("接收数据完成,总行数:");
+              }
+          }
+
+
+        /*写入数据到缓冲区*/
+        // WriteToQueueBuffer(pData,length);
+        WriteToArrayBuffer(pData,length);
+
         Serial.println("触发写入事件");
     }
 };
@@ -60,7 +94,7 @@ void BLEInit()
 
     //2.创建BLE服务器
     BLEServer *pServer = BLEDevice::createServer();
-    pServer->setCallbacks(new MyServerCallbacks());
+    pServer->setCallbacks(new IsConnectServerCallbacks());//绑定回调
 
     //3.创建BLE服务Service
     BLEService *pService = pServer->createService(SERVICE_UUID);
@@ -73,8 +107,8 @@ void BLEInit()
                              BLECharacteristic::PROPERTY_NOTIFY
     );
 
-   pCharacteristic->setValue("test data");//设置特征值
-   pCharacteristic->setCallbacks(new MyCharacteristicCallbacks());//设置特征回调
+   pCharacteristic->setValue("PRINTER");//设置特征值,客户端连接上后没有任何写入读取到的默认值
+   pCharacteristic->setCallbacks(new TriggerCharacteristicCallbacks());//设置特征回调
 
     //5.启动服务
     pService->start();
@@ -91,6 +125,9 @@ void BLEReport()
         DeviceStatus* pDevice = getDeviceStatus();
 
         uint8_t status[4] = {0};
+
+        //简易数据包,不考虑安全
+        //包头 长度 指令类型 和校验码都没有,实际使用应该要加上
 
         status[0] = pDevice->battery;
         status[1] = pDevice->temperature;

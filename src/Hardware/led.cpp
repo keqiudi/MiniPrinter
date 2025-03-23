@@ -30,11 +30,11 @@ void LedControl(LED_STATUS status)
         break;
 
     case LED_FAST_BLINK:
-        LedBlink(200);
+        LedBlink(100);
         break;
 
     case LED_SLOW_BLINK:
-        LedBlink(2000);
+        LedBlink(1000);
         break;
     }
 }

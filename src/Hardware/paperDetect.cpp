@@ -32,10 +32,12 @@ void PaperDetect()
     if (digitalRead(PaperDetect_Pin) == HIGH)
     {
         Serial.printf("Paper Lack\r\n");
+        getDeviceStatus()->paperStatus = PAPER_LACK;
     }
     else
     {
         state = PAPER_FULL;
+        getDeviceStatus()->paperStatus = PAPER_LACK;
     }
 }
 

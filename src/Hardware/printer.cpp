@@ -16,6 +16,8 @@
 #define STB3_Pin 26
 #define STB2_Pin 27
 #define STB1_Pin 14
+
+#define ALL_STB_NUM 0xFF
 //打印的六个通道
 
 #define LAT_Pin 12
@@ -27,7 +29,7 @@
 #define LAT_TIM 1 //锁存时间1us,手册是1ns可以行吗？
 
 
- void PrinterPowerOn()
+void PrinterPowerOn()
 {
     digitalWrite(VH_EN_Pin,HIGH);
 }
@@ -41,9 +43,7 @@
  void PrinterPowerInit()
 {
     pinMode(VH_EN_Pin,OUTPUT);
-
     PrinterPowerOff();//默认关闭打印头电源
-
 }
 
  void StbOff()
@@ -84,7 +84,7 @@ void PrinterInit()
 {
 
     StepmotorInit();//步进电机初始化
-    PrinterPowerInit();//打印头电源引脚初始化
+
     StbInit();//打印通道初始化
 
     LatInit();//锁存引脚初始化
@@ -94,14 +94,41 @@ void PrinterInit()
 
 
 
-static void StopPrinting()
+void printerErrorCheck(bool needReport)
 {
-    PrinterPowerOff();
-    StbOff();
+    //打印超时
 
-    digitalWrite(LAT_Pin,HIGH);
+
+    //缺纸
+
+    //温度过高
+
+
+
+    //
+
 }
 
+
+static void StopPrinting()
+{
+    PrinterPowerOff();//打印头电源关闭
+    StbOff();//通道电平复位
+
+    digitalWrite(LAT_Pin,HIGH);//LAT复位
+}
+
+
+static void SendOnelineData(uint8_t* data)
+{
+
+    SPICommand(data,48);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
+
+    digitalWrite(LAT_Pin,LOW);
+    delayMicroseconds(1);//锁存保持时间
+    digitalWrite(LAT_Pin,HIGH);
+
+}
 
 static void StbRun(uint8_t stbNum)
 {
@@ -157,28 +184,27 @@ bool StbWorking(bool needStop,uint8_t stbNum)
         return true;
     }
 
-
-
-
-    StbRun(stbNum);
-    StepmotorRunStep(4);//四步为一行的长度,补齐3步刚好为1行
+    //所有通道打印
+    if (stbNum == ALL_STB_NUM)
+    {
+        for (uint8_t index=1;index<7;index++)
+        {
+            StbRun(index);
+        }
+        StepmotorRunStep(4);//此处等待6个通道打印后再移动点击可能会造成卡顿，如果6个通道时间长的话???
+    }
+    else//单通道打印
+    {
+        StbRun(stbNum);
+        StepmotorRunStep(4);//打印后应该向下移动1行的距离,4步为一行
+    }
 
     return false;
 
 }
 
 
-static void SendOnelineData(uint8_t* data)
-{
-
-    SPICommand(data,48);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
-
-    digitalWrite(LAT_Pin,LOW);
-    delayMicroseconds(1);//锁存保持时间
-    digitalWrite(LAT_Pin,HIGH);
-
-}
-
+//单通道数组打印
 void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
 {
     uint32_t printEnd = 0;
@@ -212,7 +238,55 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
 
     StepmotorRunStep(40);//打印一次完成后让纸移动一点距离
     StepmotorStop();
+
+    Serial.print("print finished!\r\t");
 }
+
+//多通道数组打印
+void StartPrintingByAllStb(uint8_t* data,uint32_t size)
+ {
+     uint32_t printEnd = 0;
+     uint8_t* pData = data;
+     bool needStop = false;
+
+
+     PrinterPowerOn();
+     StbOff();
+     LatOff();
+
+     while (true)
+     {
+         if (size > printEnd)
+         {
+
+             SendOnelineData(pData);
+
+             pData+=48;//移动至下一行的48Byte数据
+             printEnd+=48;//打印结束判断
+         }
+         else
+             needStop = true;
+
+         if (StbWorking(needStop,ALL_STB_NUM))
+         {
+             break;
+         }
+     }
+ }
+
+
+//可变队列缓冲区打印
+void StartPrintingByAllStb()
+{
+
+    bool needStop = false;
+    PrinterPowerOn();
+    StbOff();
+    LatOff();
+
+}
+
+
 
 
 
@@ -227,9 +301,10 @@ static void setDebugData(uint8_t *print_data)
 }
 
 
-void PrinterTest()
+/*进行打印测试，所有通道分别打印5行*/
+void PrinterStbTest()
 {
-    uint8_t print_data[48 * 5] = {0};//打印5行
+    uint8_t print_data[48 * 5] = {0};
     uint32_t size = 48*5;
 
     setDebugData(print_data);
