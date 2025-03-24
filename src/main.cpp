@@ -1,8 +1,6 @@
+
 #include <Arduino.h>
 #include <task.h>
-
-
-
 
 void setup()
 {
@@ -11,7 +9,7 @@ void setup()
 
 void loop()
 {
-    Printer
+    PrinterRunning();
 }
 
 

@@ -6,9 +6,13 @@
 #include "printerSPI.h"
 #include "stepmotor.h"
 #include "printer.h"
+
+#include <utils/myBuffer.h>
+
 #include "printerTemp.h"
 #include "paperDetect.h"
 #include "SPI.h"
+#include "utils/myQueue.h"
 
 #define STB6_Pin 32
 #define STB5_Pin 33
@@ -40,7 +44,7 @@ void PrinterPowerOn()
 }
 
 
- void PrinterPowerInit()
+void PrinterPowerInit()
 {
     pinMode(VH_EN_Pin,OUTPUT);
     PrinterPowerOff();//默认关闭打印头电源
@@ -82,13 +86,10 @@ void PrinterPowerOn()
 
 void PrinterInit()
 {
-
+    PrinterPowerInit();//打印头电源引脚初始化
     StepmotorInit();//步进电机初始化
-
     StbInit();//打印通道初始化
-
     LatInit();//锁存引脚初始化
-
     SPIInit();
 }
 
@@ -228,7 +229,9 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
             printEnd+=48;//打印结束判断
         }
         else
+        {
             needStop = true;
+        }
 
         if (StbWorking(needStop,StbNum))
         {
@@ -236,7 +239,7 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
         }
     }
 
-    StepmotorRunStep(40);//打印一次完成后让纸移动一点距离
+    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
     StepmotorStop();
 
     Serial.print("print finished!\r\t");
@@ -265,30 +268,59 @@ void StartPrintingByAllStb(uint8_t* data,uint32_t size)
              printEnd+=48;//打印结束判断
          }
          else
+         {
              needStop = true;
+         }
 
          if (StbWorking(needStop,ALL_STB_NUM))
          {
              break;
          }
      }
+
+    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
+    StepmotorStop();
+
+    Serial.print("print finished!\r\t");
  }
 
 
 //可变队列缓冲区打印
-void StartPrintingByAllStb()
+void StartPrintingByQueueBuffer()
 {
-
     bool needStop = false;
     PrinterPowerOn();
     StbOff();
     LatOff();
 
+    while (true)
+    {
+        if (getLeftLine()>0)
+        {
+            uint8_t* pData = readFromQueueBuffer();
+
+            if (pData != nullptr)
+            {
+                SendOnelineData(pData);
+            }
+
+            if (StbWorking(needStop,ALL_STB_NUM))
+            {
+                break;
+            }
+        }
+        else
+        {
+            needStop = true;
+        }
+    }
+
+    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
+    StepmotorStop();
+
+    ClearPrinterBuffer();
+    Serial.print("print finished!\r\t");
 }
-
-
-
-
 
 
 static void setDebugData(uint8_t *print_data)
@@ -322,6 +354,3 @@ void PrinterStbTest()
 
     StepmotorRunStep(200);
 }
-
-
-

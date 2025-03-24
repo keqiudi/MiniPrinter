@@ -5,6 +5,7 @@
 #include <Arduino.h>
 
 #include "utils/myQueue.h"
+#include "utils/myBuffer.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include "device.h"
@@ -78,9 +79,12 @@ class TriggerCharacteristicCallbacks : public BLECharacteristicCallbacks
           }
 
 
-        /*写入数据到缓冲区*/
-        // WriteToQueueBuffer(pData,length);
-        WriteToArrayBuffer(pData,length);
+        /**
+         * 写入数据到缓冲区
+         * 此处与安卓客户端协商,每次安卓发送的数据包只包含一行数据48Byte
+         */
+        WriteToQueueBuffer(pData,length);
+        // WriteToArrayBuffer(pData,length);
 
         Serial.println("触发写入事件");
     }

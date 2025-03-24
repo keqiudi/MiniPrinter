@@ -6,7 +6,8 @@
 #include "task.h"
 #include <Arduino.h>
 #include <device.h>
-
+#include "utils/myBuffer.h"
+#include "utils/myQueue.h"
 #include "Hardware/PaperDetect.h"
 #include "Hardware/BLE.h"
 #include "Hardware/printer.h"
@@ -56,6 +57,7 @@ void PrinterRunning()
 {
     DeviceStatus* pDevice = getDeviceStatus();
 
+
     if (pDevice->bleReadFlag == true)
     {
         if (pDevice->printerStatus == PRINTER_IDLE || pDevice->printerStatus == PRINTER_INIT)
@@ -68,15 +70,15 @@ void PrinterRunning()
         }
     }
 
-
-
+    
     //开始打印
     if (pDevice->printerStatus == PRINTER_START)
     {
         pDevice->printerStatus = PRINTER_WORKING;
         //打印中
-        StartPrintingByAllStb();
-
+        // ArrayBuffer* pArrayBuffer = getPrinterArrayBuffer();
+        // StartPrintingByAllStb(pArrayBuffer->arrayBuffer,pArrayBuffer->bufferIndex);
+        StartPrintingByQueueBuffer();
         pDevice->printerStatus = PRINTER_IDLE;
     }
 }
@@ -86,9 +88,12 @@ void TaskInit()
 {
     Serial.begin(115200);
 
-    LedInit();
-    PrinterPowerInit();//打印头电源引脚初始化
     PrinterInit();
+    deviceStatusInit();
+    QueueInit();
+
+    LedInit();
+
 
     /*1.任务函数 2.任务名称 3.任务堆栈大小 4.任务参数 5.任务优先级 6.任务句柄*/
     xTaskCreate(StartBleTask,"BleTask",1024*10,NULL,0,NULL);
