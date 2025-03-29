@@ -23,6 +23,7 @@ void StartKeyTask(void *pvParameters)
     for (;;)
     {
         KeyScan();
+        vTaskDelay(10);
     }
 }
 
@@ -91,9 +92,7 @@ void TaskInit()
     PrinterInit();
     deviceStatusInit();
     QueueInit();
-
     LedInit();
-
 
     /*1.任务函数 2.任务名称 3.任务堆栈大小 4.任务参数 5.任务优先级 6.任务句柄*/
     xTaskCreate(StartBleTask,"BleTask",1024*10,NULL,0,NULL);

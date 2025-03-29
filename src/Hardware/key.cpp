@@ -46,7 +46,7 @@ void KeyScan()
 
         if (KeyPressed == true)
         {
-            if (pDevice->paperStatus == PAPER_FULL&&pDevice->printerStatus == PRINTER_IDLE)
+            if (pDevice->paperStatus == PAPER_FULL && pDevice->printerStatus == PRINTER_IDLE)
             {
                 if (millis() - KeyPressTick > LONG_PRESS_TIME)//长按操作
                 {
