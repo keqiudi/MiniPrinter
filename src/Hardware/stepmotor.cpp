@@ -54,8 +54,9 @@ void StepmotorInit()
 
 
 //指定步数运行,阻塞式运行
-void StepmotorRunStep(uint32_t steps)
+void StepmotorRunStep(uint32_t Steps)
 {
+     uint32_t steps = Steps;
      while (steps)
      {
          digitalWrite(STEPMOTOR_AP_Pin, StepmotorTimeTable[motorIndex][0]);
@@ -68,6 +69,7 @@ void StepmotorRunStep(uint32_t steps)
 
          steps--;
 
+         Serial.printf("steps:%d",steps);
          delay(STEPMOTOR_WAITTIME);//步进电机速度控制,不控制可能会造成电机还没走完下一次就到来了
      }
 

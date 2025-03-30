@@ -23,7 +23,7 @@ void StartKeyTask(void *pvParameters)
     for (;;)
     {
         KeyScan();
-        vTaskDelay(10);
+        vTaskDelay(10);//慢一点执行,避免其他任务无法抢到时间片
     }
 }
 
@@ -49,6 +49,7 @@ void StartDeviceStatusTask(void *pvParameters)
         TempDetect();
         PaperDetect();
         BatteryDetect();
+        vTaskDelay(2000);
     }
 }
 

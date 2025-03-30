@@ -74,7 +74,7 @@ class TriggerCharacteristicCallbacks : public BLECharacteristicCallbacks
               else if (pData[0]==0xA6&&pData[1]==0xA6&&pData[2]==0xA6&&pData[3]==0xA6 && pData[4]==0x01)
               {
                     setBleReadFlag(true);//接收到该信息代表数据接收完成了,触发打印
-                    Serial.printf("接收数据完成,总行数:");
+                    Serial.printf("接收数据完成,总行数:\r\n");
               }
           }
 
@@ -141,6 +141,6 @@ void BLEReport()
         pCharacteristic->setValue(status,  sizeof(status));
         pCharacteristic->notify();//通知给连接设备,连接订阅即可收到消息
 
-        Serial.println("状态上报成功");
+        // Serial.println("状态上报成功");
     }
 }

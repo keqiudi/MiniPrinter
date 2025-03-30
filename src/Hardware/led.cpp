@@ -25,15 +25,15 @@ void LedControl(LED_STATUS status)
         digitalWrite(LED_Pin, HIGH);
         break;
 
-    case LED_ON:
+    case LED_ON:  //待机状态
         digitalWrite(LED_Pin,LOW);
         break;
 
-    case LED_FAST_BLINK:
+    case LED_FAST_BLINK:  //故障状态
         LedBlink(100);
         break;
 
-    case LED_SLOW_BLINK:
+    case LED_SLOW_BLINK: //工作状态
         LedBlink(1000);
         break;
     }

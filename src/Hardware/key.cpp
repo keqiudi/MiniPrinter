@@ -2,10 +2,9 @@
 // Created by keqiu on 25-3-10.
 //
 #include <Arduino.h>
-#include <./Hardware/key.h>
-#include <./Hardware/led.h>
-#include "./Hardware/printer.h"
-#include "./Hardware/stepmotor.h"
+#include <Hardware/key.h>
+#include "Hardware/printer.h"
+#include "Hardware/stepmotor.h"
 #include "device.h"
 
 #define LONG_PRESS_TIME 1000
@@ -51,7 +50,7 @@ void KeyScan()
                 if (millis() - KeyPressTick > LONG_PRESS_TIME)//长按操作
                 {
 
-                    StepmotorRunStep(200);
+                    StepmotorRunStep(300);
 
                 }
                 else//短按操作
@@ -61,7 +60,14 @@ void KeyScan()
             }
             else
             {
-                Serial.printf("正在打印中... 禁止使用按键调试");
+                if (pDevice->paperStatus == PAPER_LACK)
+                {
+                    Serial.printf("缺纸：禁止使用按键调试");
+                }
+                else if ( pDevice->printerStatus == PRINTER_WORKING)
+                {
+                    Serial.printf("正在打印中... 禁止使用按键调试");
+                }
             }
             KeyPressed = false;
         }

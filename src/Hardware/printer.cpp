@@ -6,11 +6,11 @@
 #include "printerSPI.h"
 #include "stepmotor.h"
 #include "printer.h"
-
+#include "BLE.h"
+#include <device.h>
 #include <utils/myBuffer.h>
 
-#include "printerTemp.h"
-#include "paperDetect.h"
+#include "led.h"
 #include "SPI.h"
 #include "utils/myQueue.h"
 
@@ -94,20 +94,40 @@ void PrinterInit()
 }
 
 
-
-void printerErrorCheck(bool needReport)
+//检查异常情况同时上报
+bool printerErrorCheck(bool needReport)
 {
-    //打印超时
 
+    DeviceStatus* pDevice = getDeviceStatus();
 
-    //缺纸
+    //缺纸异常,上报
+    if (pDevice->paperStatus == PAPER_LACK)
+    {
+        Serial.printf("status:%d\r\n",pDevice->paperStatus);
+        if (needReport)
+        {
+            ClearQueueBuffer();
+            BLEReport();
+        }
+        Serial.printf("产生异常：缺纸！");
+        LedControl(LED_FAST_BLINK);
+        return true;
+    }
 
-    //温度过高
+    //温度过高异常,上报
+    if (pDevice->temperature >= 50)//手册工作温度为50度
+    {
+        if (needReport)
+        {
+            ClearQueueBuffer();
+            BLEReport();
+        }
+        Serial.printf("产生异常：打印机温度过高");
+        LedControl(LED_FAST_BLINK);
+        return true;
+    }
 
-
-
-    //
-
+    return false;
 }
 
 
@@ -197,7 +217,7 @@ bool StbWorking(bool needStop,uint8_t stbNum)
     else//单通道打印
     {
         StbRun(stbNum);
-        StepmotorRunStep(4);//打印后应该向下移动1行的距离,4步为一行
+        StepmotorRunStep(4);//打印后应该向下移动1行的距离,4不为一行
     }
 
     return false;
@@ -237,9 +257,14 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
         {
             break;
         }
+
+        if (printerErrorCheck(true))
+        {
+            break;
+        }
     }
 
-    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
+    StepmotorRunStep(200);//打印一次完成后让纸移动一点距离
     StepmotorStop();
 
     Serial.print("print finished!\r\t");
@@ -276,6 +301,11 @@ void StartPrintingByAllStb(uint8_t* data,uint32_t size)
          {
              break;
          }
+
+         if (printerErrorCheck(true))
+         {
+             break;
+         }
      }
 
     StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
@@ -288,7 +318,6 @@ void StartPrintingByAllStb(uint8_t* data,uint32_t size)
 //可变队列缓冲区打印
 void StartPrintingByQueueBuffer()
 {
-    bool needStop = false;
     PrinterPowerOn();
     StbOff();
     LatOff();
@@ -304,21 +333,22 @@ void StartPrintingByQueueBuffer()
                 SendOnelineData(pData);
             }
 
-            if (StbWorking(needStop,ALL_STB_NUM))
-            {
-                break;
-            }
+            StbWorking(false,ALL_STB_NUM);
         }
         else
         {
-            needStop = true;
+            break;
+        }
+
+        if (printerErrorCheck(true))
+        {
+            break;
         }
     }
 
-    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
+    StepmotorRunStep(200);//打印一次完成后让纸移动一点距离,方便下次打印
     StepmotorStop();
 
-    ClearPrinterBuffer();
     Serial.print("print finished!\r\t");
 }
 
