@@ -5,6 +5,9 @@
 
 #include <Arduino.h>
 #include "battery.h"
+
+#include <device.h>
+
 #include "esp_adc_cal.h"
 
 #define Battery_ADC_Pin 34
@@ -61,6 +64,8 @@ void BatteryDetect()
     {
         Battery = 100;
     }
+
+     getDeviceStatus()->battery = Battery;
 
     Serial.printf("Battery:%d%%\r\n",Battery);
 }

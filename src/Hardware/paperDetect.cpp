@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include "PaperDetect.h"
 #include "device.h"
+#include "led.h"
 
 #define PaperDetect_Pin 35
 

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "utils/myQueue.h"
-#include "utils/myBuffer.h"
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include "device.h"
@@ -17,8 +17,13 @@
 
 
 bool BLEConnected = false;
-
+uint16_t packageLine = 0;
 BLECharacteristic *pCharacteristic;
+
+bool getBleConnect()
+{
+    return BLEConnected;
+}
 
 
 class IsConnectServerCallbacks : public BLEServerCallbacks
@@ -71,13 +76,15 @@ class TriggerCharacteristicCallbacks : public BLECharacteristicCallbacks
                   }
                   return ; //设置深度后立马返回不处理其他
               }
-              else if (pData[0]==0xA6&&pData[1]==0xA6&&pData[2]==0xA6&&pData[3]==0xA6 && pData[4]==0x01)
+
+              if (pData[0]==0xA6&&pData[1]==0xA6&&pData[2]==0xA6&&pData[3]==0xA6 && pData[4]==0x01)
               {
-                    setBleReadFlag(true);//接收到该信息代表数据接收完成了,触发打印
-                    Serial.printf("接收数据完成,总行数:\r\n");
+                    setBleReadFlag(true);//接收到该组数据,代表客户端发送数据完成了,触发打印
+                    Serial.printf("接收数据完成,总行数:%d\r\n",packageLine);
               }
           }
 
+        packageLine++;
 
         /**
          * 写入数据到缓冲区

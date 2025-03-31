@@ -42,4 +42,6 @@ void LedControl(LED_STATUS status)
 void LedInit()
 {
   	pinMode(LED_Pin, OUTPUT);
+
+    LedControl(LED_OFF);
 }

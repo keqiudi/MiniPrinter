@@ -5,6 +5,7 @@
 #include "printerTemp.h"
 
 #include <Arduino.h>
+#include <device.h>
 
 #include "led.h"
 
@@ -64,11 +65,8 @@ void TempDetect()
 {
 
     float temp = calculateTemp();
+
+    getDeviceStatus()->temperature = temp;
+
     Serial.printf("打印头当前温度为：%.2f\r\n",temp);
-
-    if (temp>40)
-    {
-        LedControl(LED_FAST_BLINK);
-    }
-
 }

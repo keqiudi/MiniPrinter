@@ -8,9 +8,6 @@
 #include "printer.h"
 #include "BLE.h"
 #include <device.h>
-#include <utils/myBuffer.h>
-
-#include "led.h"
 #include "SPI.h"
 #include "utils/myQueue.h"
 
@@ -27,10 +24,10 @@
 #define LAT_Pin 12
 #define VH_EN_Pin 17
 
-#define PRINT_TIME 1700 //打印时间选择在1.5ms至3ms即可，过长会损坏打印头。手册为300ns
-#define PRINT_WAIT_TIME 200 //冷却时间200us
+#define PRINT_TIME 2700 //打印时间，即对应STB通道高电平保持时间，选择在1.5ms至3ms即可，过长会损坏打印头。
+#define PRINT_WAIT_TIME 200 //冷却时间200us,问AI得到的值，手册上也没写
 
-#define LAT_TIM 1 //锁存时间1us,手册是1ns可以行吗？
+#define LAT_TIME 1 //锁存时间1us,手册要求LAT建立时间最少100ns,然后再保持50ns
 
 
 void PrinterPowerOn()
@@ -42,7 +39,6 @@ void PrinterPowerOn()
 {
     digitalWrite(VH_EN_Pin,LOW);
 }
-
 
 void PrinterPowerInit()
 {
@@ -110,7 +106,6 @@ bool printerErrorCheck(bool needReport)
             BLEReport();
         }
         Serial.printf("产生异常：缺纸！");
-        LedControl(LED_FAST_BLINK);
         return true;
     }
 
@@ -123,7 +118,6 @@ bool printerErrorCheck(bool needReport)
             BLEReport();
         }
         Serial.printf("产生异常：打印机温度过高");
-        LedControl(LED_FAST_BLINK);
         return true;
     }
 
@@ -146,11 +140,12 @@ static void SendOnelineData(uint8_t* data)
     SPICommand(data,48);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
 
     digitalWrite(LAT_Pin,LOW);
-    delayMicroseconds(1);//锁存保持时间
+    delayMicroseconds(LAT_TIME);//锁存保持时间
     digitalWrite(LAT_Pin,HIGH);
 
 }
 
+//通道打印
 static void StbRun(uint8_t stbNum)
 {
     switch (stbNum)
@@ -208,11 +203,11 @@ bool StbWorking(bool needStop,uint8_t stbNum)
     //所有通道打印
     if (stbNum == ALL_STB_NUM)
     {
-        for (uint8_t index=1;index<7;index++)
+        for (uint8_t stbIndex=1;stbIndex<7;stbIndex++)
         {
-            StbRun(index);
+            StbRun(stbIndex);
         }
-        StepmotorRunStep(4);//此处等待6个通道打印后再移动点击可能会造成卡顿，如果6个通道时间长的话???
+        StepmotorRunStep(4);//当通道加热时间变长后，等待一行的6个通道加热完成时间变长，电机才会移动,会导致打印时一卡一卡的，影响体验
     }
     else//单通道打印
     {
@@ -260,11 +255,12 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size)
 
         if (printerErrorCheck(true))
         {
-            break;
+            StepmotorStop();
+            return;
         }
     }
 
-    StepmotorRunStep(200);//打印一次完成后让纸移动一点距离
+    StepmotorRunStep(100);//打印一次完成后让纸移动一点距离
     StepmotorStop();
 
     Serial.print("print finished!\r\t");
@@ -304,7 +300,8 @@ void StartPrintingByAllStb(uint8_t* data,uint32_t size)
 
          if (printerErrorCheck(true))
          {
-             break;
+             StepmotorStop();
+             return;
          }
      }
 
@@ -315,12 +312,12 @@ void StartPrintingByAllStb(uint8_t* data,uint32_t size)
  }
 
 
-//可变队列缓冲区打印
+//可变队列环形缓冲区打印
 void StartPrintingByQueueBuffer()
 {
     PrinterPowerOn();
-    StbOff();
-    LatOff();
+    StbOff();//stb通道复位
+    LatOff();//Lat引脚复位
 
     while (true)
     {
@@ -337,17 +334,21 @@ void StartPrintingByQueueBuffer()
         }
         else
         {
+            StepmotorStop();
+            StopPrinting();
             break;
         }
 
         if (printerErrorCheck(true))
         {
+            StepmotorStop();
+            StopPrinting();
             break;
         }
     }
 
     StepmotorRunStep(200);//打印一次完成后让纸移动一点距离,方便下次打印
-    StepmotorStop();
+    StepmotorStop();//电机复位
 
     Serial.print("print finished!\r\t");
 }

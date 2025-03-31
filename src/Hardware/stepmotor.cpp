@@ -69,7 +69,6 @@ void StepmotorRunStep(uint32_t Steps)
 
          steps--;
 
-         Serial.printf("steps:%d",steps);
          delay(STEPMOTOR_WAITTIME);//步进电机速度控制,不控制可能会造成电机还没走完下一次就到来了
      }
 
@@ -108,6 +107,8 @@ void StepmotorStop()
     digitalWrite(STEPMOTOR_BM_Pin,LOW);
     digitalWrite(STEPMOTOR_AP_Pin,LOW);
     digitalWrite(STEPMOTOR_AM_Pin,LOW);
+
+    motorIndex = 0;
 
     if (StepmotorTimer.active() == true)
     {

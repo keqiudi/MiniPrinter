@@ -6,7 +6,6 @@
 #include "task.h"
 #include <Arduino.h>
 #include <device.h>
-#include "utils/myBuffer.h"
 #include "utils/myQueue.h"
 #include "Hardware/PaperDetect.h"
 #include "Hardware/BLE.h"
@@ -53,6 +52,49 @@ void StartDeviceStatusTask(void *pvParameters)
     }
 }
 
+void StartLedTask(void *pvParameters)
+{
+    DeviceStatus* pDevice = getDeviceStatus();
+    LedInit();
+
+    for (;;)
+    {
+
+        if (pDevice->printerStatus == PRINTER_IDLE || pDevice->printerStatus == PRINTER_INIT)
+        {
+            if (getBleConnect() == true)
+            {
+                if (pDevice->temperature > 50 || pDevice->paperStatus == PAPER_LACK)
+                {
+                    LedControl(LED_FAST_BLINK);
+                }
+                else
+                {
+                    LedControl(LED_ON);
+                }
+            }
+            else
+            {
+                LedControl(LED_OFF);
+            }
+
+        }
+
+        else if (pDevice->printerStatus  == PRINTER_START || pDevice->printerStatus == PRINTER_WORKING)
+        {
+
+            if (pDevice->temperature > 50 || pDevice->paperStatus == PAPER_LACK)
+            {
+                LedControl(LED_FAST_BLINK);
+            }
+            else
+            {
+                LedControl(LED_SLOW_BLINK);
+            }
+        }
+    }
+}
+
 
 
 void PrinterRunning()
@@ -67,8 +109,7 @@ void PrinterRunning()
             pDevice->bleReadFlag = false;
             pDevice->printerStatus = PRINTER_START;
             BLEReport();//打印开始上报一下
-            LedControl(LED_SLOW_BLINK);
-            Serial.printf("");
+            Serial.printf("Start Printing...");
         }
     }
 
@@ -93,10 +134,10 @@ void TaskInit()
     PrinterInit();
     deviceStatusInit();
     QueueInit();
-    LedInit();
 
     /*1.任务函数 2.任务名称 3.任务堆栈大小 4.任务参数 5.任务优先级 6.任务句柄*/
-    xTaskCreate(StartBleTask,"BleTask",1024*10,NULL,0,NULL);
-    xTaskCreate(StartKeyTask,"KeyTask",1024*5,NULL,1,NULL);
-    xTaskCreate(StartDeviceStatusTask,"DeviceStatusTask",1024*5,NULL,2,NULL);
+    xTaskCreate(StartLedTask,"LedTask",1024*5,NULL,0,NULL);
+    xTaskCreate(StartBleTask,"BleTask",1024*10,NULL,1,NULL);
+    xTaskCreate(StartKeyTask,"KeyTask",1024*5,NULL,2,NULL);
+    xTaskCreate(StartDeviceStatusTask,"DeviceStatusTask",1024*5,NULL,3,NULL);
 }

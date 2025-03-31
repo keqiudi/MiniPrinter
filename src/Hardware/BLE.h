@@ -5,7 +5,7 @@
 #ifndef BLE_H
 #define BLE_H
 
-
+bool getBleConnect();
 
 void BLEInit();
 

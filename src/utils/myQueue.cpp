@@ -50,36 +50,46 @@ void WriteToQueueBuffer(uint8_t* data,uint8_t length)
     {
         length = MAX_ONELINE_BYTE;
     }
+    // 查看是否可以获得信号量，如果信号量不可用，则用10个时钟滴答(10ms)来查看信号量是否可用
+    // if (xSemaphoreTake(xMutex,(TickType_t)10) == pdPASS)
+    // {
+        memcpy(&receiveData.printerBuffer[receiveData.wIndex],data,length);//将接收的一行数据拷贝到环形缓冲区中
 
-    memcpy(&receiveData.printerBuffer[receiveData.wIndex],data,length);//将接收的一行数据拷贝到缓冲区中
+        receiveData.wIndex = (receiveData.wIndex+1)%MAX_LINE;//写入索引移动1行,并形成环形缓冲区
 
-    receiveData.wIndex = (receiveData.wIndex+1)%MAX_LINE;//写入索引移动1行,并形成环形缓冲区
+        receiveData.printerLeftLine++;//打印剩余行数增加1行
 
-    receiveData.printerLeftLine++;//打印剩余行数增加1行
+        if (receiveData.printerLeftLine >= MAX_LINE)
+        {
+            receiveData.printerLeftLine = MAX_LINE;//保证打印函数不超过最大行数
+        }
 
-    if (receiveData.printerLeftLine >= MAX_LINE)
-    {
-        receiveData.printerLeftLine = MAX_LINE;//保证打印函数不超过
-    }
-
+    //     xSemaphoreGive(xMutex);
+    // }
 }
 
 uint8_t* readFromQueueBuffer()
 {
      uint32_t rIndex = 0;
 
-    if (receiveData.printerLeftLine>0)
-    {
-        receiveData.printerLeftLine--;
+    // if (xSemaphoreTake(xMutex,(TickType_t)10) == pdPASS)
+    // {
+        if (receiveData.printerLeftLine>0)
+        {
+            receiveData.printerLeftLine--;//剩余打印行数-1
 
-        rIndex = receiveData.rIndex;//获取当前可读位置的索引
+            rIndex = receiveData.rIndex;//获取当前可读位置的索引
 
-        receiveData.rIndex = (receiveData.rIndex+1)%MAX_LINE;//可读位置索引移动1,形成缓冲区
+            receiveData.rIndex = (receiveData.rIndex+1)%MAX_LINE;//可读位置索引移动1,形成环形缓冲区
 
+            //
+            // xSemaphoreGive(xMutex);
 
-        return receiveData.printerBuffer[rIndex].lineBuffer;//返回读取位置的一行数据
-    }
-
+            return receiveData.printerBuffer[rIndex].lineBuffer;//返回读取位置的一行数据
+        }
+    //
+    //     xSemaphoreGive(xMutex);
+    // }
 
     return nullptr;
 }
