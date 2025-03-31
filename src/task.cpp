@@ -34,7 +34,7 @@ void StartBleTask(void *pvParameters)
     for (;;)
     {
         BLEReport();
-        vTaskDelay(500);
+        vTaskDelay(1000);
     }
 }
 
@@ -64,7 +64,7 @@ void StartLedTask(void *pvParameters)
         {
             if (getBleConnect() == true)
             {
-                if (pDevice->temperature > 55 || pDevice->paperStatus == PAPER_LACK)
+                if (pDevice->temperature > 60 || pDevice->paperStatus == PAPER_LACK)
                 {
                     LedControl(LED_FAST_BLINK);
                 }
@@ -83,7 +83,7 @@ void StartLedTask(void *pvParameters)
         else if (pDevice->printerStatus  == PRINTER_START || pDevice->printerStatus == PRINTER_WORKING)
         {
 
-            if (pDevice->temperature > 55 || pDevice->paperStatus == PAPER_LACK)
+            if (pDevice->temperature > 60 || pDevice->paperStatus == PAPER_LACK)
             {
                 LedControl(LED_FAST_BLINK);
             }

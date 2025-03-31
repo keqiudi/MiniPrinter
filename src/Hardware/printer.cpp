@@ -10,7 +10,7 @@
 #include "SPI.h"
 #include "utils/myQueue.h"
 
-uint8_t heatDensity = 65;
+uint8_t heatDensity = 80;
 
 float addTime[6] = {0};//6个通道分别的补偿加热时间
 
@@ -122,7 +122,7 @@ bool printerErrorCheck(bool needReport)
     }
 
     //温度过高异常,上报
-    if (pDevice->temperature > 55)//手册工作温度为50度
+    if (pDevice->temperature > 60)//手册工作温度为50度
     {
         if (needReport)
         {
