@@ -54,7 +54,7 @@ void StepmotorInit()
 
 
 
-//指定步数运行,阻塞式运行
+//电机走指定步数：阻塞式运行：适合打印完成后连续移动电机的走纸
 void StepmotorRunStep(uint32_t Steps)
 {
      uint32_t steps = Steps;
@@ -73,6 +73,18 @@ void StepmotorRunStep(uint32_t Steps)
          delay(STEPMOTOR_WAITTIME);//步进电机速度控制,不控制可能会造成电机还没走完下一次就到来了
      }
 
+}
+
+/*电机走一步：去掉了最后步进电机的等待时间,因为打印时移动电机存在间隔，所以刚好不用delay，减少卡顿带来的错位*/
+void StepmotorRunOneStep()
+{
+    digitalWrite(STEPMOTOR_AP_Pin, StepmotorTimeTable[motorIndex][0]);
+    digitalWrite(STEPMOTOR_BP_Pin, StepmotorTimeTable[motorIndex][1]);
+    digitalWrite(STEPMOTOR_AM_Pin, StepmotorTimeTable[motorIndex][2]);
+    digitalWrite(STEPMOTOR_BM_Pin, StepmotorTimeTable[motorIndex][3]);
+
+    motorIndex++;
+    motorIndex%=8;//8步为一个循环,4步为一行
 }
 
 

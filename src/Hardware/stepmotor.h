@@ -10,6 +10,7 @@
 void StepmotorInit();
 
 void StepmotorRunStep(uint32_t steps);
+void StepmotorRunOneStep();
 
 void StepmotorStart();
 

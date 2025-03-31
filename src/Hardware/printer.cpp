@@ -213,7 +213,6 @@ bool StbWorking(bool needStop,uint8_t stbNum)
         return true;
     }
     //所有通道打印
-    StepmotorRunStep(1);
     if (stbNum == ALL_STB_NUM)
     {
 
@@ -222,9 +221,10 @@ bool StbWorking(bool needStop,uint8_t stbNum)
             StbRun(stbIndex);
             if ( stbIndex%2 ==0)
             {
-                StepmotorRunStep(1);   //优化为：加热时电机同时移动,减少卡顿和等待时间
+                StepmotorRunOneStep();   //优化为：加热时电机同时移动,去掉了指定步数时每一步运行完的等待，减少卡顿和等待时间
             }
         }
+        StepmotorRunOneStep();
         // StepmotorRunStep(4);//当通道加热时间变长后，等待一行的6个通道加热完成时间变长，电机才会移动,会导致打印时一卡一卡的，影响体验
     }
     else//单通道打印
