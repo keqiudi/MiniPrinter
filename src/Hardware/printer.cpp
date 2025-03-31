@@ -10,6 +10,7 @@
 #include "SPI.h"
 #include "utils/myQueue.h"
 
+uint8_t heatDensity = 65;
 
 float addTime[6] = {0};//6个通道分别的补偿加热时间
 
@@ -73,12 +74,19 @@ void PrinterInit()
     SPIInit();
 }
 
+void setHeatDensity(uint8_t density)
+{
+    heatDensity  = density;
+    Serial.printf("打印密度设置为:%d%%",density);
+}
+
+
 void ClearAddTime()
 {
     memset(addTime,0,sizeof(addTime));
 }
 
-void CalculateAddTime(uint8_t* data)
+void CalculateAddTime(const uint8_t* data)
 {
     float tmpAddTime = 0;
     ClearAddTime();
@@ -87,9 +95,9 @@ void CalculateAddTime(uint8_t* data)
     {
         for (int j = 0;j<8;j++)
         {
-            addTime[i] += data[i*8+j];  //一个Byte代表8个点,8个点都选中就是 0xFF 255,一个通道控制8个Byte 255*8 = 2040
+            addTime[i] += data[i * 8 + j];  //一个Byte代表8个点,8个点都选中就是 0xFF 255,一个通道控制8个Byte 255*8 = 2040
         }
-        tmpAddTime = addTime[i]*addTime[i]; //max: 2040*2040 = 4161600
+        tmpAddTime = addTime[i] * addTime[i]; //max: 2040*2040 = 4161600
         addTime[i] = kAddTime * tmpAddTime;//max：0.001*4161600 = 4161.6
     }
 }
@@ -114,7 +122,7 @@ bool printerErrorCheck(bool needReport)
     }
 
     //温度过高异常,上报
-    if (pDevice->temperature >= 50)//手册工作温度为50度
+    if (pDevice->temperature > 55)//手册工作温度为50度
     {
         if (needReport)
         {
@@ -140,7 +148,7 @@ static void StopPrinting()
 
 static void SendOnelineData(uint8_t* data)
 {
-    CalculateAddTime(data);
+    CalculateAddTime(data);//保证在SPI总线发送之前计算，否则data中数据会消失,补偿时间变为0了
 
     SPICommand(data,MAX_ONELINE_BYTE);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
 
@@ -157,37 +165,37 @@ static void StbRun(uint8_t stbNum)
     {
     case 1:
         digitalWrite(STB1_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[0]);//打印时间选择在1.5ms至3ms即可，过长会损坏打印头。手册为300ns
+        delayMicroseconds((PRINT_TIME + addTime[0]) * ((double)heatDensity/ 100));//打印时间选择在1.5ms至3ms即可，过长会损坏打印头。手册为300ns
         digitalWrite(STB1_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us,0.2ms
         break;
     case 2:
         digitalWrite(STB2_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[1]);
+        delayMicroseconds((PRINT_TIME + addTime[1]) * ((double)heatDensity/ 100));
         digitalWrite(STB2_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 3:
         digitalWrite(STB3_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[2]);
+        delayMicroseconds((PRINT_TIME + addTime[2]) * ((double)heatDensity/ 100));
         digitalWrite(STB3_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 4:
         digitalWrite(STB4_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[3]);
+        delayMicroseconds((PRINT_TIME + addTime[3]) * ((double)heatDensity/ 100));
         digitalWrite(STB4_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 5:
         digitalWrite(STB5_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[4]);
+        delayMicroseconds((PRINT_TIME + addTime[4]) * ((double)heatDensity/ 100));
         digitalWrite(STB5_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 6:
         digitalWrite(STB6_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME+addTime[5]);
+        delayMicroseconds((PRINT_TIME + addTime[5]) * ((double)heatDensity/ 100));
         digitalWrite(STB6_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
@@ -205,23 +213,24 @@ bool StbWorking(bool needStop,uint8_t stbNum)
         return true;
     }
     //所有通道打印
+    StepmotorRunStep(1);
     if (stbNum == ALL_STB_NUM)
     {
+
         for (uint8_t stbIndex=1;stbIndex<7;stbIndex++)
         {
             StbRun(stbIndex);
-            if (stbIndex%2 ==0)
+            if ( stbIndex%2 ==0)
             {
                 StepmotorRunStep(1);   //优化为：加热时电机同时移动,减少卡顿和等待时间
             }
         }
-        StepmotorRunStep(1);
         // StepmotorRunStep(4);//当通道加热时间变长后，等待一行的6个通道加热完成时间变长，电机才会移动,会导致打印时一卡一卡的，影响体验
     }
     else//单通道打印
     {
         StbRun(stbNum);
-        StepmotorRunStep(4);//打印后应该向下移动1行的距离,4不为一行
+        StepmotorRunStep(3);//打印后应该向下移动1行的距离,4不为一行
     }
 
     return false;

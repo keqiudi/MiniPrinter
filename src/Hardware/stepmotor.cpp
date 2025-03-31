@@ -14,7 +14,8 @@
 
 
 
-#define STEPMOTOR_WAITTIME 2 //根据手册我们使用的是500Hz,我们使用每走一步时间为2ms,频率为500Hz
+#define STEPMOTOR_WAITTIME  2 //根据手册我们使用的是500Hz,我们使用每走一步时间为2ms,频率为500Hz
+//调整该值可以加快出纸张速度,但太快会导致步进电机发热
 
 
 
@@ -73,7 +74,6 @@ void StepmotorRunStep(uint32_t Steps)
      }
 
 }
-
 
 
 //定时器回调函数

@@ -14,4 +14,6 @@ void StartPrintingByOneStb(uint8_t StbNum,uint8_t* data,uint32_t size);
 void StartPrintingByAllStb(uint8_t* data,uint32_t size);
 void StartPrintingByQueueBuffer();
 
+void  setHeatDensity(uint8_t density);
+
 #endif //PRINTER_H

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "utils/myQueue.h"
-
+#include "printer.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include "device.h"
@@ -65,13 +65,14 @@ class TriggerCharacteristicCallbacks : public BLECharacteristicCallbacks
                   //设置打印深度
                   switch (pData[4])
                   {
-                      case 30:
+                      case 1:
+                          setHeatDensity(30);
                           break;
-                      case 60:
-                          break;
-                      case 100:
+                      case 2:
+                          setHeatDensity(60);
                           break;
                       default:
+                          setHeatDensity(100);
                           break;
                   }
                   return ; //设置深度后立马返回不处理其他
