@@ -1,33 +1,17 @@
 //
 // Created by keqiu on 25-3-17.
 //
-
-#include <Arduino.h>
 #include "printerSPI.h"
-#include "stepmotor.h"
+#include "printerConfig.h"
 #include "printer.h"
+#include "stepmotor.h"
 #include "BLE.h"
 #include <device.h>
 #include "SPI.h"
 #include "utils/myQueue.h"
 
-#define STB6_Pin 32
-#define STB5_Pin 33
-#define STB4_Pin 25
-#define STB3_Pin 26
-#define STB2_Pin 27
-#define STB1_Pin 14
 
-#define ALL_STB_NUM 0xFF
-//打印的六个通道
-
-#define LAT_Pin 12
-#define VH_EN_Pin 17
-
-#define PRINT_TIME 2700 //打印时间，即对应STB通道高电平保持时间，选择在1.5ms至3ms即可，过长会损坏打印头。
-#define PRINT_WAIT_TIME 200 //冷却时间200us,问AI得到的值，手册上也没写
-
-#define LAT_TIME 1 //锁存时间1us,手册要求LAT建立时间最少100ns,然后再保持50ns
+float addTime[6] = {0};//6个通道分别的补偿加热时间
 
 
 void PrinterPowerOn()
@@ -89,6 +73,26 @@ void PrinterInit()
     SPIInit();
 }
 
+void ClearAddTime()
+{
+    memset(addTime,0,sizeof(addTime));
+}
+
+void CalculateAddTime(uint8_t* data)
+{
+    float tmpAddTime = 0;
+    ClearAddTime();
+
+    for (int i = 0;i<6;i++)
+    {
+        for (int j = 0;j<8;j++)
+        {
+            addTime[i] += data[i*8+j];  //一个Byte代表8个点,8个点都选中就是 0xFF 255,一个通道控制8个Byte 255*8 = 2040
+        }
+        tmpAddTime = addTime[i]*addTime[i]; //max: 2040*2040 = 4161600
+        addTime[i] = kAddTime * tmpAddTime;//max：0.001*4161600 = 4161.6
+    }
+}
 
 //检查异常情况同时上报
 bool printerErrorCheck(bool needReport)
@@ -136,8 +140,9 @@ static void StopPrinting()
 
 static void SendOnelineData(uint8_t* data)
 {
+    CalculateAddTime(data);
 
-    SPICommand(data,48);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
+    SPICommand(data,MAX_ONELINE_BYTE);//一个通道控制64个点,每一行有6个通道，共384个点,384bit,48byte
 
     digitalWrite(LAT_Pin,LOW);
     delayMicroseconds(LAT_TIME);//锁存保持时间
@@ -152,37 +157,37 @@ static void StbRun(uint8_t stbNum)
     {
     case 1:
         digitalWrite(STB1_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);//打印时间选择在1.5ms至3ms即可，过长会损坏打印头。手册为300ns
+        delayMicroseconds(PRINT_TIME+addTime[0]);//打印时间选择在1.5ms至3ms即可，过长会损坏打印头。手册为300ns
         digitalWrite(STB1_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us,0.2ms
         break;
     case 2:
         digitalWrite(STB2_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);
+        delayMicroseconds(PRINT_TIME+addTime[1]);
         digitalWrite(STB2_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 3:
         digitalWrite(STB3_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);
+        delayMicroseconds(PRINT_TIME+addTime[2]);
         digitalWrite(STB3_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 4:
         digitalWrite(STB4_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);
+        delayMicroseconds(PRINT_TIME+addTime[3]);
         digitalWrite(STB4_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 5:
         digitalWrite(STB5_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);
+        delayMicroseconds(PRINT_TIME+addTime[4]);
         digitalWrite(STB5_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
     case 6:
         digitalWrite(STB6_Pin,HIGH);
-        delayMicroseconds(PRINT_TIME);
+        delayMicroseconds(PRINT_TIME+addTime[5]);
         digitalWrite(STB6_Pin,LOW);
         delayMicroseconds(PRINT_WAIT_TIME);//冷却时间200us
         break;
